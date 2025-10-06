@@ -15,6 +15,11 @@
     .layout{display:grid;grid-template-columns:320px 1fr;gap:20px}
     @media (max-width:880px){.layout{grid-template-columns:1fr}}
 
+    /* Search */
+    .search-wrap{display:flex;gap:8px;align-items:center}
+    .search-input{padding:8px 10px;border-radius:8px;border:1px solid #ded6c9;font-size:0.95rem;min-width:220px}
+    .search-clear{background:#ddd;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+
     /* Sidebar / Form */
     .sidebar{background:var(--card);padding:14px;border-radius:10px;border:1px solid #eae3d8}
     .form-row{display:flex;flex-direction:column;margin-bottom:10px}
@@ -42,8 +47,14 @@
 <body>
   <div class="container">
     <header>
-      <h1>Caravan Delivery</h1>
-      <div class="small">Приложение доставки продуктов — добавляйте товары вручную</div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <h1>Caravan Delivery</h1>
+        <div class="small">Приложение доставки продуктов — добавляйте товары вручную</div>
+      </div>
+      <div class="search-wrap">
+        <input id="search" class="search-input" type="text" placeholder="Поиск товаров по названию или описанию...">
+        <button id="clearSearch" class="search-clear" title="Очистить поиск">✕</button>
+      </div>
     </header>
 
     <div class="layout">
@@ -113,6 +124,9 @@
     const clearBtn = document.getElementById('clearBtn')
     const productsEl = document.getElementById('products')
 
+    const searchEl = document.getElementById('search')
+    const clearSearchBtn = document.getElementById('clearSearch')
+
     hasDiscountEl.addEventListener('change', ()=>{
       discountRow.style.display = hasDiscountEl.checked ? 'block' : 'none'
     })
@@ -129,6 +143,16 @@
       discountEl.value = ''
     })
 
+    clearSearchBtn.addEventListener('click', ()=>{
+      searchEl.value = ''
+      renderProducts('')
+      searchEl.focus()
+    })
+
+    searchEl.addEventListener('input', (e)=>{
+      renderProducts(e.target.value)
+    })
+
     function loadProducts(){
       try{
         const raw = localStorage.getItem(storageKey)
@@ -141,14 +165,20 @@
       localStorage.setItem(storageKey, JSON.stringify(list))
     }
 
-    function renderProducts(){
+    function renderProducts(query){
       const list = loadProducts()
+      const q = (query||'').toLowerCase().trim()
+      const filtered = q ? list.filter(p => {
+        const hay = (p.name+' '+(p.desc||'')+' '+(p.price||'')).toString().toLowerCase()
+        return hay.indexOf(q) !== -1
+      }) : list
+
       productsEl.innerHTML = ''
-      if(list.length===0){
-        productsEl.innerHTML = '<div class="small">Нет добавленных товаров. Используйте форму, чтобы добавить новый товар.</div>'
+      if(filtered.length===0){
+        productsEl.innerHTML = '<div class="small">Нет совпадающих товаров.</div>'
         return
       }
-      list.forEach((p, idx)=>{
+      filtered.forEach((p, idx)=>{
         const card = document.createElement('div')
         card.className = 'product'
         card.innerHTML = `
@@ -188,7 +218,7 @@
       const list = loadProducts()
       list.push({name, price, img, desc, popular, discount})
       saveProducts(list)
-      renderProducts()
+      renderProducts(searchEl.value)
       clearBtn.click()
     })
 
@@ -204,7 +234,7 @@
           if(confirm('Удалить этот товар?')){
             list.splice(idx,1)
             saveProducts(list)
-            renderProducts()
+            renderProducts(searchEl.value)
           }
         }
       }else if(action==='add'){
@@ -226,7 +256,7 @@
     }
 
     ensureDefaults()
-    renderProducts()
+    renderProducts('')
   </script>
 </body>
 </html>
