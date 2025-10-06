@@ -2,62 +2,231 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Caravan Delivery</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background-color: #f5f0e6;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      color: #3e3e3e;
-      text-align: center;
-    }
-    .product {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 20px;
-      background-color: #fff;
-    }
-    .product img {
-      width: 100%;
-      border-radius: 10px;
-    }
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      background-color: #d4af37;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
+    :root{--bg:#f5f0e6;--card:#fff;--accent:#d4af37;--muted:#7a7a7a}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:var(--bg);margin:0;padding:18px;color:#222}
+    .container{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px}
+    h1{margin:0;font-size:1.6rem;color:#3e3e3e}
+    .small{font-size:0.95rem;color:var(--muted)}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:20px}
+    @media (max-width:880px){.layout{grid-template-columns:1fr}}
+
+    /* Sidebar / Form */
+    .sidebar{background:var(--card);padding:14px;border-radius:10px;border:1px solid #eae3d8}
+    .form-row{display:flex;flex-direction:column;margin-bottom:10px}
+    label{font-size:0.9rem;margin-bottom:6px}
+    input[type="text"], input[type="number"], textarea{padding:8px;border:1px solid #ded6c9;border-radius:6px;font-size:0.95rem}
+    textarea{resize:vertical;min-height:70px}
+    .btn{display:inline-block;padding:10px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+    .btn.secondary{background:#6c6c6c}
+
+    /* Products grid */
+    .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+    .product{background:var(--card);padding:12px;border-radius:10px;border:1px solid #e6dfd4;position:relative;overflow:hidden}
+    .product img{width:100%;height:150px;object-fit:cover;border-radius:8px}
+    .product h2{margin:8px 0 6px 0;font-size:1.05rem}
+    .product p{margin:0;color:var(--muted);font-size:0.95rem}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .discount{position:absolute;top:10px;right:10px;background:#ff6b6b;color:#fff;padding:6px 8px;border-radius:6px;font-weight:700}
+    .badge{position:absolute;top:12px;left:-36px;background:var(--accent);color:#fff;padding:6px 56px;transform:rotate(-45deg);font-weight:700}
+
+    /* Promos & footer */
+    .promos{margin:18px 0;padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(212,175,55,0.06), rgba(212,175,55,0.02));border:1px dashed rgba(212,175,55,0.2)}
+    footer{margin-top:20px;padding:14px;border-radius:10px;background:var(--card);border:1px solid #e8e3da;text-align:center;color:#999}
   </style>
 </head>
 <body>
-  <h1>Добро пожаловать в Caravan Delivery</h1>
+  <div class="container">
+    <header>
+      <h1>Caravan Delivery</h1>
+      <div class="small">Приложение доставки продуктов — добавляйте товары вручную</div>
+    </header>
 
-  <div class="product">
-    <img src="https://i.imgur.com/PlovPhoto.jpg" alt="Плов">
-    <h2>Плов по-фергански</h2>
-    <button class="btn">Добавить в заказ</button>
+    <div class="layout">
+      <aside class="sidebar" aria-label="Управление товарами">
+        <h3>Добавить товар</h3>
+        <div class="form-row">
+          <label for="name">Название</label>
+          <input id="name" type="text" placeholder="Например: Плов по-фергански">
+        </div>
+        <div class="form-row">
+          <label for="price">Цена (₽)</label>
+          <input id="price" type="number" min="0" placeholder="250">
+        </div>
+        <div class="form-row">
+          <label for="img">URL изображения</label>
+          <input id="img" type="text" placeholder="https://i.imgur.com/example.jpg">
+        </div>
+        <div class="form-row">
+          <label for="desc">Описание</label>
+          <textarea id="desc" placeholder="Краткое описание блюда"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <label style="display:flex;gap:6px;align-items:center"><input id="popular" type="checkbox"> Популярное</label>
+          <label style="display:flex;gap:6px;align-items:center;margin-left:6px"><input id="hasDiscount" type="checkbox"> Скидка</label>
+        </div>
+        <div class="form-row" id="discountRow" style="display:none">
+          <label for="discount">Скидка (%)</label>
+          <input id="discount" type="number" min="0" max="100" placeholder="10">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="addBtn" class="btn">Добавить товар</button>
+          <button id="clearBtn" class="btn secondary">Очистить</button>
+        </div>
+        <hr style="margin:12px 0">
+        <div class="small">Сохранение происходит локально в вашем браузере.</div>
+      </aside>
+
+      <main>
+        <section class="promos" aria-label="Акции">
+          <strong>Акции и спецпредложения</strong>
+          <div class="small">Комбо, скидки и бесплатная доставка — показываются для клиентов.</div>
+        </section>
+
+        <section>
+          <div id="products" class="products" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+
+    <footer>© Caravan Delivery — Все права защищены</footer>
   </div>
 
-  <div class="product">
-    <img src="https://i.imgur.com/SamsaPhoto.jpg" alt="Самса">
-    <h2>Самса с мясом</h2>
-    <button class="btn">Добавить в заказ</button>
-  </div>
+  <script>
+    // Работа с товарами (локальное хранилище)
+    const storageKey = 'caravan_products_v1'
 
-  <div class="product">
-    <img src="https://i.imgur.com/TeaPhoto.jpg" alt="Чай">
-    <h2>Чай с чабрецом</h2>
-    <button class="btn">Добавить в заказ</button>
-  </div>
+    // Элементы формы
+    const nameEl = document.getElementById('name')
+    const priceEl = document.getElementById('price')
+    const imgEl = document.getElementById('img')
+    const descEl = document.getElementById('desc')
+    const popularEl = document.getElementById('popular')
+    const hasDiscountEl = document.getElementById('hasDiscount')
+    const discountRow = document.getElementById('discountRow')
+    const discountEl = document.getElementById('discount')
+    const addBtn = document.getElementById('addBtn')
+    const clearBtn = document.getElementById('clearBtn')
+    const productsEl = document.getElementById('products')
+
+    hasDiscountEl.addEventListener('change', ()=>{
+      discountRow.style.display = hasDiscountEl.checked ? 'block' : 'none'
+    })
+
+    clearBtn.addEventListener('click', (e)=>{
+      e.preventDefault()
+      nameEl.value = ''
+      priceEl.value = ''
+      imgEl.value = ''
+      descEl.value = ''
+      popularEl.checked = false
+      hasDiscountEl.checked = false
+      discountRow.style.display = 'none'
+      discountEl.value = ''
+    })
+
+    function loadProducts(){
+      try{
+        const raw = localStorage.getItem(storageKey)
+        if(!raw) return []
+        return JSON.parse(raw)
+      }catch(e){console.warn('Failed parsing products',e);return[]}
+    }
+
+    function saveProducts(list){
+      localStorage.setItem(storageKey, JSON.stringify(list))
+    }
+
+    function renderProducts(){
+      const list = loadProducts()
+      productsEl.innerHTML = ''
+      if(list.length===0){
+        productsEl.innerHTML = '<div class="small">Нет добавленных товаров. Используйте форму, чтобы добавить новый товар.</div>'
+        return
+      }
+      list.forEach((p, idx)=>{
+        const card = document.createElement('div')
+        card.className = 'product'
+        card.innerHTML = `
+          ${p.popular?'<div class="badge">Популярно</div>':''}
+          ${p.discount?`<div class="discount">-${p.discount}%</div>`:''}
+          <img src="${escapeHtml(p.img || 'https://i.imgur.com/PlovPhoto.jpg')}" alt="${escapeHtml(p.name)}">
+          <h2>${escapeHtml(p.name)} <span style="font-weight:700;color:#333;margin-left:6px">${p.price?p.price+'₽':''}</span></h2>
+          <p>${escapeHtml(p.desc||'')}</p>
+          <div class="actions">
+            <button class="btn" data-action="add" data-idx="${idx}">Добавить в заказ</button>
+            <button class="btn secondary" data-action="delete" data-idx="${idx}">Удалить</button>
+          </div>
+        `
+        productsEl.appendChild(card)
+      })
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;')
+    }
+
+    addBtn.addEventListener('click',(e)=>{
+      e.preventDefault()
+      const name = nameEl.value.trim()
+      const price = priceEl.value ? Number(priceEl.value) : ''
+      const img = imgEl.value.trim()
+      const desc = descEl.value.trim()
+      const popular = popularEl.checked
+      const discount = hasDiscountEl.checked ? (discountEl.value ? Number(discountEl.value) : 0) : 0
+
+      if(!name){ alert('Укажите название товара'); return }
+      const list = loadProducts()
+      list.push({name, price, img, desc, popular, discount})
+      saveProducts(list)
+      renderProducts()
+      clearBtn.click()
+    })
+
+    // Делегирование на кнопки внутри списка
+    productsEl.addEventListener('click',(e)=>{
+      const btn = e.target.closest('button')
+      if(!btn) return
+      const action = btn.getAttribute('data-action')
+      const idx = Number(btn.getAttribute('data-idx'))
+      const list = loadProducts()
+      if(action==='delete'){
+        if(!Number.isNaN(idx)&&list[idx]){
+          if(confirm('Удалить этот товар?')){
+            list.splice(idx,1)
+            saveProducts(list)
+            renderProducts()
+          }
+        }
+      }else if(action==='add'){
+        alert('Товар добавлен в тестовый заказ: '+(list[idx]?.name||''))
+      }
+    })
+
+    // Инициализация: если нет товаров в хранилище, добавить примеры
+    function ensureDefaults(){
+      const list = loadProducts()
+      if(list.length===0){
+        const defaults = [
+          {name:'Плов по-фергански', price:350, img:'https://i.imgur.com/PlovPhoto.jpg', desc:'Традиционный плов с бараниной и ароматными специями.', popular:true, discount:10},
+          {name:'Самса с мясом', price:120, img:'https://i.imgur.com/SamsaPhoto.jpg', desc:'Хрустящая самса, приготовленная по старинному рецепту.', popular:false, discount:0},
+          {name:'Чай с чабрецом', price:60, img:'https://i.imgur.com/TeaPhoto.jpg', desc:'Ароматный чай с душистым чабрецом.', popular:false, discount:0}
+        ]
+        saveProducts(defaults)
+      }
+    }
+
+    ensureDefaults()
+    renderProducts()
+  </script>
 </body>
 </html>
